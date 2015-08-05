@@ -34,6 +34,10 @@ DIVERS_CONF=("/etc/spamassassin/local.cf" "/var/www/postfixadmin/config.inc.php"
 			"/var/log/mail.warn" "/var/log/mail.err"\
 			"/etc/nginx/sites-enabled/rainloop.conf" "/etc/nginx/sites-enabled/postfixadmin.conf")
 
+# Pour rTorrent
+RUTORRENT="/var/www/rutorrent"
+RUTORRENT_CONFFILE="/etc/nginx/sites-enabled/rutorrent.conf"
+
 if [[ $UID != 0 ]]; then
 	echo -e "${CRED}Ce script doit être executé en tant que root${CEND}"
 	exit
@@ -73,7 +77,7 @@ function checkBin() # $2 utile pour faire une redirection dans $RAPPORT + Pas d'
 {
 	if ! [[ $(dpkg -s "$1" | grep Status ) =~ "Status: install ok installed" ]]  &> /dev/null ; then # $1 = Nom du programme
 		if [[ $2 = 1 ]]; then
-			echo "Le programme $1 n'est pas installé" >> $RAPPORT
+			echo -e "Le programme $1 n'est pas installé" >> $RAPPORT
 		else
 			echo -e "${CGREEN}\nLe programme${CEND} ${CYELLOW}$1${CEND}${CGREEN} n'est pas installé\nIl va être installé pour la suite du script${CEND}"
 			sleep 2
@@ -81,7 +85,7 @@ function checkBin() # $2 utile pour faire une redirection dans $RAPPORT + Pas d'
 		fi
 	else
 		if [[ $2 = 1 ]]; then
-			echo "Le programme $1 est installé" >> $RAPPORT
+			echo -e "Le programme $1 est installé" >> $RAPPORT
 		fi
 	fi
 }
@@ -133,9 +137,62 @@ function rapport()
 	EOF
 }
 
+function testTorrent()
+{
+SCGI="$(sed -n '/^scgi_port/p' /home/$USERNAME/.rtorrent.rc | cut -b 23-)"
+PORT_LISTENING=$(netstat -aultnp | awk '{print $4}' | grep -E ":$SCGI\$" -c)
+RTORRENT_LISTENING=$(netstat -aultnp | sed -n '/'$SCGI'/p' | grep rtorrent -c)
+
+cat <<-EOF >> $RAPPORT
+
+		...................................
+		## Test rTorrent & sgci                  ##
+		...................................
+		EOF
+# rTorrent lancé
+if [[ "$(ps uU "$USERNAME" | grep -e 'rtorrent' -c)" == [0-1]  ]]; then
+	echo -e "rTorrent down" >> $RAPPORT
+else
+	echo -e "rTorrent Up" >> $RAPPORT
+fi
+#else
+#    echo -e "${CRED}Test rTorrent impossible, user inexistant${CEND}"
+#fi
+
+# socket
+if (( PORT_LISTENING >= 1 )); then
+    echo -e "Un socket écoute sur le port $SCGI" >> $RAPPORT
+    if (( RTORRENT_LISTENING >= 1 )); then
+        echo -e "C'est bien rTorrent qui écoute sur le port $SCGI" >> $RAPPORT
+    else
+        echo -e "Ce n'est pas rTorrent qui écoute sur le port $SCGI" >> $RAPPORT
+    fi
+else
+        echo -e "Aucun programme n'écoute sur le port $SCGI" >> $RAPPORT
+fi
+
+# ruTorrent
+if [[ -f $RUTORRENT/conf/users/$USERNAME/config.php ]]; then
+		if [[ $(cat "$RUTORRENT"/conf/users/"$USERNAME"/config.php) =~ "\$scgi_port = $SCGI" ]]; then
+			echo -e "Bon port SCGI renseigné dans le fichier config.php"  >> $RAPPORT
+		else
+			echo -e "Mauvais port SCGI renseigné dans le fichier config.php"  >> $RAPPORT
+		fi
+else
+	echo -e "Répertoire utilisateur trouvé, mais fichier config.php inexistant"  >> $RAPPORT
+fi
+
+# nginx
+if [[ $(cat $RUTORRENT_CONFFILE) =~ $SCGI ]]; then
+	echo -e "Les ports nginx et celui indiqué correspondent"   >> $RAPPORT
+else
+	echo -e "Les ports nginx et celui indiqué ne correspondent pas"   >> $RAPPORT
+fi
+}
+
 function remove()
 {
-	echo -e -n "${CGREEN}\nVoulez vous désinstaller Pastebinit? (y/n]:${CEND} "
+	echo -e -n "${CGREEN}\nVoulez vous désinstaller Pastebinit? (y/n):${CEND} "
 	read -r PASTEBINIT
 	if [ "$PASTEBINIT" = "y" ]  || [ "$PASTEBINIT" = "Y" ]; then
 		apt-get remove -y pastebinit &>/dev/null
@@ -178,6 +235,19 @@ case $OPTION in
 			echo -e "--> Utilisateur $USERNAME existant" >> $RAPPORT
 		fi
 
+		testTorrent
+
+		cat <<-EOF >> $RAPPORT
+		...................................
+		## rTorrent Activity             ##
+		...................................
+		EOF
+		if [[ $VALID_USER = 0 ]]; then
+			echo -e "--> Utilisateur inexistant" >> $RAPPORT
+		else
+			echo -e "$(/bin/ps uU "$USERNAME" | grep -e rtorrent)" >> $RAPPORT
+		fi
+
 		cat <<-EOF >> $RAPPORT
 
 		...................................
@@ -196,8 +266,8 @@ case $OPTION in
 
 		rapport /var/log/nginx/rutorrent-error.log nGinx.Logs 1
 		rapport /etc/nginx/nginx.conf nGinx.Conf 1
-		rapport /etc/nginx/sites-enabled/rutorrent.conf ruTorrent.Conf.nGinx 1
-		rapport /var/www/rutorrent/conf/config.php ruTorrent.Config.Php 1
+		rapport $RUTORRENT_CONFFILE ruTorrent.Conf.nGinx 1
+		rapport $RUTORRENT/conf/config.php ruTorrent.Config.Php 1
 
 		cat <<-EOF >> $RAPPORT
 
@@ -208,23 +278,11 @@ case $OPTION in
 		if [[ $VALID_USER = 0 ]]; then
 			echo "--> Fichier introuvable (Utilisateur Invalide)" >> $RAPPORT
 		else
-			if ! [[ -f "/var/www/rutorrent/conf/users/$USERNAME/config.php" ]]; then
+			if ! [[ -f "$RUTORRENT/conf/users/$USERNAME/config.php" ]]; then
 				echo "--> Fichier introuvable" >> $RAPPORT
 			else
-				cat /var/www/rutorrent/conf/users/"$USERNAME"/config.php >> $RAPPORT
+				cat $RUTORRENT/conf/users/"$USERNAME"/config.php >> $RAPPORT
 			fi
-		fi
-
-		cat <<-EOF >> $RAPPORT
-
-		...................................
-		## rTorrent Activity             ##
-		...................................
-		EOF
-		if [[ $VALID_USER = 0 ]]; then
-			echo -e "--> Utilisateur inexistant" >> $RAPPORT
-		else
-			echo -e "$(/bin/ps uU "$USERNAME" | grep -e rtorrent)" >> $RAPPORT
 		fi
 
 		genRapport
