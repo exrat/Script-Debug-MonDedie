@@ -36,7 +36,7 @@ DIVERS_CONF=("/etc/spamassassin/local.cf" "/var/www/postfixadmin/config.inc.php"
 
 # Pour rTorrent
 RUTORRENT="/var/www/rutorrent"
-RUTORRENT_CONFFILE="/etc/nginx/sites-enabled/rutorrent.conf"
+RUTORRENT_CONFFILE="/etc/nginx/sites-enabled"
 
 if [[ $UID != 0 ]]; then
 	echo -e "${CRED}Ce script doit être executé en tant que root${CEND}"
@@ -55,7 +55,7 @@ function gen()
 		ruTorrent )
 				cat <<-EOF >> $RAPPORT
 
-				### Rapport pour ruTorrent généré le $DATE ###
+				###  Rapport pour ruTorrent généré le $DATE  ###
 
 				Utilisateur ruTorrent => $USERNAME
 				Kernel : $NOYAU
@@ -65,7 +65,7 @@ function gen()
 		mail )
 				cat <<-EOF >> $RAPPORT
 
-				### Rapport pour Mail généré le $DATE 
+				###  Rapport pour Mail généré le $DATE  ###
 
 				Kernel : $NOYAU
 				EOF
@@ -145,9 +145,9 @@ RTORRENT_LISTENING=$(netstat -aultnp | sed -n '/'$SCGI'/p' | grep rtorrent -c)
 
 cat <<-EOF >> $RAPPORT
 
-		...................................
-		## Test rTorrent & sgci                  ##
-		...................................
+...................................
+## Test rTorrent & sgci                  ##
+...................................
 		EOF
 # rTorrent lancé
 if [[ "$(ps uU "$USERNAME" | grep -e 'rtorrent' -c)" == [0-1]  ]]; then
@@ -155,9 +155,6 @@ if [[ "$(ps uU "$USERNAME" | grep -e 'rtorrent' -c)" == [0-1]  ]]; then
 else
 	echo -e "rTorrent Up" >> $RAPPORT
 fi
-#else
-#    echo -e "${CRED}Test rTorrent impossible, user inexistant${CEND}"
-#fi
 
 # socket
 if (( PORT_LISTENING >= 1 )); then
@@ -183,7 +180,7 @@ else
 fi
 
 # nginx
-if [[ $(cat $RUTORRENT_CONFFILE) =~ $SCGI ]]; then
+if [[ $(cat $RUTORRENT_CONFFILE/rutorrent.conf) =~ $SCGI ]]; then
 	echo -e "Les ports nginx et celui indiqué correspondent"   >> $RAPPORT
 else
 	echo -e "Les ports nginx et celui indiqué ne correspondent pas"   >> $RAPPORT
@@ -266,7 +263,7 @@ case $OPTION in
 
 		rapport /var/log/nginx/rutorrent-error.log nGinx.Logs 1
 		rapport /etc/nginx/nginx.conf nGinx.Conf 1
-		rapport $RUTORRENT_CONFFILE ruTorrent.Conf.nGinx 1
+		rapport $RUTORRENT_CONFFILE/rutorrent.conf ruTorrent.Conf.nGinx 1
 		rapport $RUTORRENT/conf/config.php ruTorrent.Config.Php 1
 
 		cat <<-EOF >> $RAPPORT
@@ -283,6 +280,11 @@ case $OPTION in
 			else
 				cat $RUTORRENT/conf/users/"$USERNAME"/config.php >> $RAPPORT
 			fi
+		fi
+
+		if [[ -f $RUTORRENT_CONFFILE/cakebox.conf ]]; then
+			rapport $RUTORRENT_CONFFILE/cakebox.conf Cakebox.Conf.nGinx 1
+			rapport /var/www/cakebox/config/$USERNAME.php Cakebox.Config.Php 1
 		fi
 
 		genRapport
