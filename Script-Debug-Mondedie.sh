@@ -139,7 +139,7 @@ function rapport()
 
 function testTorrent()
 {
-SCGI="$(sed -n '/^scgi_port/p' /home/$USERNAME/.rtorrent.rc | cut -b 23-)"
+SCGI="$(sed -n '/^scgi_port/p' /home/"$USERNAME"/.rtorrent.rc | cut -b 23-)"
 PORT_LISTENING=$(netstat -aultnp | awk '{print $4}' | grep -E ":$SCGI\$" -c)
 RTORRENT_LISTENING=$(netstat -aultnp | sed -n '/'$SCGI'/p' | grep rtorrent -c)
 
@@ -264,7 +264,7 @@ case $OPTION in
 		rapport /var/log/nginx/rutorrent-error.log nGinx.Logs 1
 		rapport /etc/nginx/nginx.conf nGinx.Conf 1
 		rapport $RUTORRENT_CONFFILE/rutorrent.conf ruTorrent.Conf.nGinx 1
-		rapport $RUTORRENT/conf/config.php ruTorrent.Config.Php 1
+		#rapport $RUTORRENT/conf/config.php ruTorrent.Config.Php 1
 
 		cat <<-EOF >> $RAPPORT
 
@@ -284,7 +284,7 @@ case $OPTION in
 
 		if [[ -f $RUTORRENT_CONFFILE/cakebox.conf ]]; then
 			rapport $RUTORRENT_CONFFILE/cakebox.conf Cakebox.Conf.nGinx 1
-			rapport /var/www/cakebox/config/$USERNAME.php Cakebox.Config.Php 1
+			rapport /var/www/cakebox/config/"$USERNAME".php Cakebox.Config.Php 1
 		fi
 
 		genRapport
