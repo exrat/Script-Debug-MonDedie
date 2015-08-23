@@ -264,7 +264,7 @@ case $OPTION in
 		rapport /var/log/nginx/rutorrent-error.log nGinx.Logs 1
 		rapport /etc/nginx/nginx.conf nGinx.Conf 1
 		rapport $RUTORRENT_CONFFILE/rutorrent.conf ruTorrent.Conf.nGinx 1
-		#rapport $RUTORRENT/conf/config.php ruTorrent.Config.Php 1
+		rapport $RUTORRENT/conf/config.php ruTorrent.Config.Php 1
 
 		cat <<-EOF >> $RAPPORT
 
