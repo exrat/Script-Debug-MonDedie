@@ -82,6 +82,13 @@ function checkBin() # $2 utile pour faire une redirection dans $RAPPORT + Pas d'
 			echo -e "${CGREEN}\nLe programme${CEND} ${CYELLOW}$1${CEND}${CGREEN} n'est pas installé\nIl va être installé pour la suite du script${CEND}"
 			sleep 2
 			apt-get -y install "$1" &>/dev/null
+			cat <<-EOF >> ~/.pastebinit.xml
+			<pastebinit>
+				 <pastebin>http://paste.ubuntu.com</pastebin>
+				<author>Mondedie.fr</author>
+				 <format>text</format>
+			 </pastebinit>
+			EOF
 		fi
 	else
 		if [[ $2 = 1 ]]; then
@@ -193,6 +200,7 @@ function remove()
 	read -r PASTEBINIT
 	if [ "$PASTEBINIT" = "y" ]  || [ "$PASTEBINIT" = "Y" ]; then
 		apt-get remove -y pastebinit &>/dev/null
+		rm ~/.pastebinit.xml &>/dev/null
 		echo -e "${CBLUE}Pastebinit a bien été désinstallé${CEND}"
 	fi
 }
