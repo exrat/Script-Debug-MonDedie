@@ -12,7 +12,7 @@ Toute aide est la bienvenue
 ```
 cd /tmp
 git clone https://github.com/exrat/Script-Debug-MonDedie
-cd /Script-Debug-MonDedie
+cd Script-Debug-MonDedie
 chmod a+x Script-Debug-Mondedie.sh && ./Script-Debug-Mondedie.sh
 ```
 
