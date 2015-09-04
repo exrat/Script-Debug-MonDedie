@@ -1,7 +1,9 @@
 #!/bin/bash
 #
+# Script original développé par BarracudaXT (BXT)
+#
 # cd /tmp
-# git clone https://github.com/PiXELART/Script-Debug-MonDedie
+# git clone https://github.com/exrat/Script-Debug-MonDedie
 # cd Script-Debug-MonDedie
 # chmod a+x Script-Debug-Mondedie.sh & ./Script-Debug-Mondedie.sh
 #
@@ -16,23 +18,55 @@ CBLUE="${CSI}1;34m"
 RAPPORT="/tmp/rapport.txt"
 NOYAU=$(uname -r)
 DATE=$(date +"%d-%m-%Y à %H:%M")
+DOMAIN=$(hostname -d 2> /dev/null)
+WANIP=$(dig o-o.myaddr.l.google.com @ns1.google.com txt +short | sed 's/"//g')
 
-# Pour le serveur mail
+# CONFIGURATION POUR LE SERVEUR DE MAIL
+# #######################################################################################################
+
 PORTS_MAIL=(25 110 143 587 993 995 4190)
-SOFT_MAIL=(opendkim opendkim-tools opendmarc spamassassin spamc dovecot-sieve dovecot-managesieved postfix postfix-mysql dovecot-core dovecot-imapd dovecot-lmtpd dovecot-mysql)
-OPENDKIM_CONF=("/etc/opendkim.conf" "/etc/opendkim/TrustedHosts"\
-			"/etc/opendkim/KeyTable" "/etc/opendkim/SigningTable"\
-			"/etc/opendmarc.conf")
-DOVECOT_CONF=("/etc/dovecot/dovecot.conf" "/etc/dovecot/dovecot-sql.conf.ext"\
-			"/etc/dovecot/conf.d/10-auth.conf" "/etc/dovecot/conf.d/auth-sql.conf.ext"\
-			"/etc/dovecot/conf.d/10-master.conf" "/etc/dovecot/conf.d/10-ssl.conf"\
-			"/etc/dovecot/conf.d/90-sieve.conf" "/etc/dovecot/conf.d/10-mail.conf")
-POSTFIX_CONF=("/etc/postfix/main.cf" "/etc/postfix/master.cf"\
-				"/etc/postfix/mysql-virtual-mailbox-domains.cf"\
-				"/etc/postfix/mysql-virtual-mailbox-maps.cf" "/etc/postfix/mysql-virtual-alias-maps.cf")
-DIVERS_CONF=("/etc/spamassassin/local.cf" "/var/www/postfixadmin/config.inc.php"\
-			"/var/log/mail.warn" "/var/log/mail.err"\
-			"/etc/nginx/sites-enabled/rainloop.conf" "/etc/nginx/sites-enabled/postfixadmin.conf")
+
+SOFT_MAIL=(                                                                                   \
+	postfix postfix-mysql                                                                     \
+	dovecot-core dovecot-imapd dovecot-lmtpd dovecot-mysql dovecot-sieve dovecot-managesieved \
+	opendkim opendkim-tools opendmarc                                                         \
+	spamassassin spamc
+)
+
+OPENDKIM_CONF=(                  \
+	"/etc/opendkim.conf"         \
+	"/etc/opendkim/TrustedHosts" \
+	"/etc/opendkim/KeyTable"     \
+	"/etc/opendkim/SigningTable" \
+	"/etc/opendmarc.conf"
+)
+
+DOVECOT_CONF=(                              \
+	"/etc/dovecot/dovecot.conf"             \
+	"/etc/dovecot/dovecot-sql.conf.ext"     \
+	"/etc/dovecot/conf.d/auth-sql.conf.ext" \
+	"/etc/dovecot/conf.d/10-auth.conf"      \
+	"/etc/dovecot/conf.d/10-mail.conf"      \
+	"/etc/dovecot/conf.d/10-master.conf"    \
+	"/etc/dovecot/conf.d/10-ssl.conf"       \
+	"/etc/dovecot/conf.d/20-lmtp.conf"      \
+	"/etc/dovecot/conf.d/90-sieve.conf"
+)
+
+POSTFIX_CONF=(                                      \
+	"/etc/postfix/main.cf"                          \
+	"/etc/postfix/master.cf"                        \
+	"/etc/postfix/mysql-virtual-mailbox-domains.cf" \
+	"/etc/postfix/mysql-virtual-mailbox-maps.cf"    \
+	"/etc/postfix/mysql-virtual-alias-maps.cf"
+)
+
+CLAMAV_CONF=("/etc/clamav/freshclam.conf" "/etc/clamav/clamd.conf")
+SPAM_CONF=("/etc/spamassassin/local.cf" "/etc/default/spamassassin")
+LOGS_CONF=("/var/log/mail.warn" "/var/log/mail.err")
+VHOST_CONF=("/etc/nginx/sites-enabled/rainloop.conf" "/etc/nginx/sites-enabled/postfixadmin.conf")
+
+# #######################################################################################################
 
 # Pour rTorrent
 RUTORRENT="/var/www/rutorrent"
@@ -102,7 +136,7 @@ function genRapport()
 	echo -e "${CBLUE}\nFichier de rapport terminé${CEND}\n"
 	LINK=$(/usr/bin/pastebinit $RAPPORT)
 	echo -e "Allez sur le topic adéquat et envoyez ce lien:\n${CYELLOW}$LINK${CEND}"
-	echo -e "\nFichier stocké en: ${CYELLOW}$RAPPORT${CEND}"
+	echo -e "\nRapport stocké dans le fichier : ${CYELLOW}$RAPPORT${CEND}"
 }
 
 function rapport()
@@ -138,7 +172,7 @@ function rapport()
 		EOF
 	fi
 	cat <<-EOF >> $RAPPORT
-	File : $1
+	##### ----------- File : $1 -----------------------------------------------------------------------------------------------------------------------------
 
 	$FILE
 	EOF
@@ -222,7 +256,7 @@ case $OPTION in
 	1 )
 		echo -e -n "${CGREEN}Rentrez le nom de votre utilisateur rTorrent:${CEND} "
 		read -r USERNAME
-		echo -e "Vous avez sélectionné ${CYELLOW}ruTorrent${CEND}\n"
+		echo -e "\nVous avez sélectionné ${CYELLOW}ruTorrent${CEND}\n"
 
 		gen ruTorrent "$USERNAME"
 		checkBin pastebinit
@@ -373,10 +407,10 @@ case $OPTION in
 		done > /dev/null 2>&1
 
 		# Purge Passwords
-		sed -i  "s/user=postfix password=[a-zA-Z0-9]*/user=postfix password=monpass/g;" $RAPPORT
-		sed -i -e "s/\\\$CONF\['database_password'\] = '[^']*';$/\\\$CONF\['database_password'\] = 'monpass';/g" $RAPPORT
-		sed -i -e "s/\\\$CONF\['setup_password'\] = '[^']*';$/\\\$CONF\['setup_password'\] = 'monpass';/g" $RAPPORT
-		sed -i "s/password = [a-zA-Z0-9]*/password = monpass/g;" $RAPPORT
+		sed -i -e "s/user=postfix password=[a-zA-Z0-9]*/user=postfix password=monpass/g;" \
+		       -e "s/\\\$CONF\['database_password'\] = '[^']*';$/\\\$CONF\['database_password'\] = 'monpass';/g" \
+		       -e "s/\\\$CONF\['setup_password'\] = '[^']*';$/\\\$CONF\['setup_password'\] = 'monpass';/g" \
+		       -e "s/password = [a-zA-Z0-9]*/password = monpass/g;" $RAPPORT
 
 		genRapport
 		remove
