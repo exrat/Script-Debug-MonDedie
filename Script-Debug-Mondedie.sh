@@ -15,6 +15,9 @@ CRED="${CSI}1;31m"
 CYELLOW="${CSI}1;33m"
 CBLUE="${CSI}1;34m"
 
+RUTORRENT="/var/www/rutorrent"
+RUTORRENT_CONFFILE="/etc/nginx/sites-enabled"
+
 RAPPORT="/tmp/rapport.txt"
 NOYAU=$(uname -r)
 DATE=$(date +"%d-%m-%Y à %H:%M")
@@ -67,10 +70,6 @@ LOGS_CONF=("/var/log/mail.warn" "/var/log/mail.err")
 VHOST_CONF=("/etc/nginx/sites-enabled/rainloop.conf" "/etc/nginx/sites-enabled/postfixadmin.conf")
 
 # #######################################################################################################
-
-# Pour rTorrent
-RUTORRENT="/var/www/rutorrent"
-RUTORRENT_CONFFILE="/etc/nginx/sites-enabled"
 
 if [[ $UID != 0 ]]; then
 	echo -e "${CRED}Ce script doit être executé en tant que root${CEND}"
@@ -338,7 +337,6 @@ case $OPTION in
 		gen mail
 		checkBin pastebinit
 		cat <<-EOF >> $RAPPORT
-
 		...................................
 		## Check Ports                  ##
 		...................................
@@ -352,7 +350,6 @@ case $OPTION in
 		done
 
 		cat <<-EOF >> $RAPPORT
-
 		...................................
 		## Check Softs                   ##
 		...................................
@@ -363,48 +360,102 @@ case $OPTION in
 		done > /dev/null 2>&1
 
 		cat <<-EOF >> $RAPPORT
-
 		...................................
 		## OpenDKIM Confs               ##
 		...................................
 		EOF
-		for OPENDKIM_CONF_FILE  in "${OPENDKIM_CONF[@]}"
+		for OPENDKIM_CONF_FILE in "${OPENDKIM_CONF[@]}"
 		do
 			rapport "$OPENDKIM_CONF_FILE"
 		done > /dev/null 2>&1
 
 		cat <<-EOF >> $RAPPORT
-
 		...................................
 		## DoveCot Confs                ##
 		...................................
 		EOF
-		for DOVECOT_CONF_FILE  in "${DOVECOT_CONF[@]}"
+		for DOVECOT_CONF_FILE in "${DOVECOT_CONF[@]}"
 		do
 			rapport "$DOVECOT_CONF_FILE"
 		done > /dev/null 2>&1
 
 		cat <<-EOF >> $RAPPORT
-
 		...................................
 		## PostFix Confs                ##
 		...................................
 		EOF
-		for POSTFIX_CONF_FILE  in "${POSTFIX_CONF[@]}"
+		for POSTFIX_CONF_FILE in "${POSTFIX_CONF[@]}"
 		do
 			rapport "$POSTFIX_CONF_FILE"
 		done > /dev/null 2>&1
 
 		cat <<-EOF >> $RAPPORT
-
 		...................................
-		## Divers Confs                ##
+		## ClamAV Confs                ##
 		...................................
 		EOF
-		for DIVERS_CONF_FILES  in "${DIVERS_CONF[@]}"
+		for CLAMAV_CONF_FILES in "${CLAMAV_CONF[@]}"
 		do
-			rapport "$DIVERS_CONF_FILES"
+			rapport "$CLAMAV_CONF_FILES"
 		done > /dev/null 2>&1
+
+		cat <<-EOF >> $RAPPORT
+		...................................
+		## Spamassassin Confs            ##
+		...................................
+		EOF
+		for SPAM_CONF_FILES in "${SPAM_CONF[@]}"
+		do
+			rapport "$SPAM_CONF_FILES"
+		done > /dev/null 2>&1
+
+		cat <<-EOF >> $RAPPORT
+		...................................
+		## Logs                          ##
+		...................................
+		EOF
+		for LOGS_FILES in "${LOGS_CONF[@]}"
+		do
+			rapport "$LOGS_FILES"
+		done > /dev/null 2>&1
+
+		cat <<-EOF >> $RAPPORT
+		...................................
+		## Vhost Confs                   ##
+		...................................
+		EOF
+		for VHOST_CONF_FILES in "${VHOST_CONF[@]}"
+		do
+			rapport "$VHOST_CONF_FILES"
+		done > /dev/null 2>&1
+
+		cat <<-EOF >> $RAPPORT
+		...................................
+		## DNS                           ##
+		...................................
+		- MX       : $(dig +nocmd +noall +answer MX    ${DOMAIN})
+		- SPF      : $(dig +nocmd +noall +answer TXT   ${DOMAIN})
+		- DKIM     : $(dig +nocmd +noall +answer TXT   mail._domainkey.${DOMAIN})
+		- DMARC    : $(dig +nocmd +noall +answer TXT   _dmarc.${DOMAIN})
+		- PFA      : $(dig +nocmd +noall +answer CNAME postfixadmin.${DOMAIN})
+		- RAINLOOP : $(dig +nocmd +noall +answer CNAME rainloop.${DOMAIN})
+		- REVERSE  : $(dig +short -x ${WANIP})
+		EOF
+
+		echo ""
+		read -rp "> Veuillez saisir une adresse mail paramétrée sur ce serveur : " EMAIL
+
+		cat <<-EOF >> $RAPPORT
+		...................................
+		## DOVEADM                       ##
+		...................................
+		- User Info --------------------
+		$(doveadm user ${EMAIL})
+		--------------------------------
+		- Dovecot errors ---------------
+		$(doveadm log errors)
+		--------------------------------
+		EOF
 
 		# Purge Passwords
 		sed -i -e "s/user=postfix password=[a-zA-Z0-9]*/user=postfix password=monpass/g;" \
@@ -415,6 +466,7 @@ case $OPTION in
 		genRapport
 		remove
 		;;
+
 
 	* )
 		echo -e "${CRED}Choix Invalide${CEND}"
