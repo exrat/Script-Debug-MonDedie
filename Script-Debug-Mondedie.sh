@@ -273,6 +273,9 @@ case $OPTION in
 			echo -e "--> Utilisateur $USERNAME existant" >> $RAPPORT
 		fi
 
+		echo "" ; cd /home ; ls -la >> $RAPPORT
+		echo "" ; cd /home/"$USERNAME" ; ls -la >> $RAPPORT
+
 		testTorrent
 
 		cat <<-EOF >> $RAPPORT
@@ -285,6 +288,7 @@ case $OPTION in
 		else
 			echo -e "$(/bin/ps uU "$USERNAME" | grep -e rtorrent)" >> $RAPPORT
 		fi
+		echo ""
 
 		cat <<-EOF >> $RAPPORT
 
@@ -302,10 +306,19 @@ case $OPTION in
 			fi
 		fi
 
-		rapport /var/log/nginx/rutorrent-error.log nGinx.Logs 1
+		rapport /var/log/nginx/rutorrent-error.log nGinx.Logs 1 ; echo ""
+
+		cat <<-EOF >> $RAPPORT
+		...................................
+		##Vhost présent             ##
+		...................................
+		EOF
+		#test
+		cd /etc/nginx/sites-enabled ; ls -la >> $RAPPORT ; echo ""
+
 		rapport /etc/nginx/nginx.conf nGinx.Conf 1
 		rapport $RUTORRENT_CONFFILE/rutorrent.conf ruTorrent.Conf.nGinx 1
-		rapport $RUTORRENT/conf/config.php ruTorrent.Config.Php 1
+		#rapport $RUTORRENT/conf/config.php ruTorrent.Config.Php 1
 
 		cat <<-EOF >> $RAPPORT
 
