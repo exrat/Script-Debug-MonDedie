@@ -274,7 +274,9 @@ case $OPTION in
 			echo -e "--> Utilisateur $USERNAME existant" >> $RAPPORT
 		fi
 
+		echo -e "--> /home :" >> $RAPPORT
 		cd /home ; ls -la >> $RAPPORT
+		echo -e "--> /home/$USERNAME :" >> $RAPPORT
 		cd /home/"$USERNAME" ; ls -la >> $RAPPORT
 
 		testTorrent
