@@ -261,6 +261,7 @@ case $OPTION in
 		checkBin pastebinit
 
 		cat <<-EOF >> $RAPPORT
+
 		...................................
 		## Utilisateur                  ##
 		...................................
@@ -273,12 +274,13 @@ case $OPTION in
 			echo -e "--> Utilisateur $USERNAME existant" >> $RAPPORT
 		fi
 
-		echo "" ; cd /home ; ls -la >> $RAPPORT
-		echo "" ; cd /home/"$USERNAME" ; ls -la >> $RAPPORT
+		cd /home ; ls -la >> $RAPPORT
+		cd /home/"$USERNAME" ; ls -la >> $RAPPORT
 
 		testTorrent
 
 		cat <<-EOF >> $RAPPORT
+
 		...................................
 		## rTorrent Activity             ##
 		...................................
@@ -309,12 +311,19 @@ case $OPTION in
 		rapport /var/log/nginx/rutorrent-error.log nGinx.Logs 1 ; echo ""
 
 		cat <<-EOF >> $RAPPORT
+
 		...................................
 		##Vhost présent             ##
 		...................................
 		EOF
-		#test
-		cd /etc/nginx/sites-enabled ; ls -la >> $RAPPORT ; echo ""
+		if [ ! -d /etc/nginx/sites-available ]; then
+			echo -e "Pas de dossier sites-available" >> $RAPPORT
+		else
+			echo -e "sites-available :" >> $RAPPORT
+			cd /etc/nginx/sites-available ; ls -la >> $RAPPORT
+		fi
+		echo -e "sites-enabled :" >> $RAPPORT
+		cd /etc/nginx/sites-enabled ; ls -la >> $RAPPORT
 
 		rapport /etc/nginx/nginx.conf nGinx.Conf 1
 		rapport $RUTORRENT_CONFFILE/rutorrent.conf ruTorrent.Conf.nGinx 1
