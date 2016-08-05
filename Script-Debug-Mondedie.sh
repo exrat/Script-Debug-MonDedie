@@ -66,7 +66,7 @@ function checkBin() # $2 utile pour faire une redirection dans $RAPPORT + Pas d'
 		else
 			echo -e "${CGREEN}\nLe programme${CEND} ${CYELLOW}$1${CEND}${CGREEN} n'est pas installé\nIl va être installé pour la suite du script${CEND}"
 			sleep 2
-			apt-get -y install "$1" &>/dev/null
+			apt-get -y install "$1"
 fi
 	else
 		if [[ $2 = 1 ]]; then
