@@ -278,7 +278,6 @@ if [[ -f $RUTORRENT_CONFFILE/cakebox.conf ]]; then
 	rapport /var/www/cakebox/config/"$USERNAME".php cakebox.config.Php 1
 fi
 
-rapport /var/log/nginx/rutorrent-error.log nginx.log 1
 rapport /etc/nginx/nginx.conf nginx.conf 1
 
 cd /etc/nginx/conf.d
@@ -315,6 +314,7 @@ do
         echo "$SSL"  >> $RAPPORT
 done
 cd /tmp/Script-Debug-MonDedie
+rapport /var/log/nginx/rutorrent-error.log nginx.log 1
 #rapport $RUTORRENT/conf/config.php rutorrent.config.Php 1
 
 cat <<-EOF >> $RAPPORT
