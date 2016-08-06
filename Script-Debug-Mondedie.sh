@@ -110,11 +110,11 @@ function rapport()
 
 		......................................................................
 		## $NAME
+		## File : $1
 		......................................................................
 		EOF
 	fi
 	cat <<-EOF >> $RAPPORT
-	File : $1
 
 	$FILE
 	EOF
@@ -232,9 +232,10 @@ cat <<-EOF >> $RAPPORT
 
 ......................................................................
 ## .rtorrent.rc 
+## File : /home/$USERNAME/.rtorrent.rc
 ......................................................................
 EOF
-echo  "File : /home/$USERNAME/.rtorrent.rc" >> $RAPPORT ; echo "" >> $RAPPORT
+echo "" >> $RAPPORT
 
 if [[ $VALID_USER = 0 ]]; then
 echo "--> Fichier introuvable (Utilisateur inexistant)" >> $RAPPORT
@@ -251,9 +252,10 @@ cat <<-EOF >> $RAPPORT
 
 ......................................................................
 ## ruTorrent config.php $USERNAME
+## File : $RUTORRENT/conf/users/$USERNAME/config.php
 ......................................................................
 EOF
-echo  "File : $RUTORRENT/conf/users/"$USERNAME"/config.php" >> $RAPPORT ; echo "" >> $RAPPORT
+echo "" >> $RAPPORT
 
 if [[ $VALID_USER = 0 ]]; then
 	echo "--> Fichier introuvable (Utilisateur Inexistant)" >> $RAPPORT
@@ -275,7 +277,7 @@ done
 cd /tmp/Script-Debug-MonDedie
 
 if [[ -f $RUTORRENT_CONFFILE/cakebox.conf ]]; then
-	rapport /var/www/cakebox/config/"$USERNAME".php cakebox.config.Php 1
+	rapport /var/www/cakebox/config/"$USERNAME".php cakebox.config.php 1
 fi
 
 rapport /etc/nginx/nginx.conf nginx.conf 1
@@ -291,9 +293,10 @@ cat <<-EOF >> $RAPPORT
 
 ......................................................................
 ## fichier pass nginx
+## Dir : /etc/nginx/passwd
 ......................................................................
 EOF
-echo  "Dir : /etc/nginx/passwd" >> $RAPPORT ; echo "" >> $RAPPORT
+echo "" >> $RAPPORT
 cd /etc/nginx/passwd
 for PASS in `ls`
 do
@@ -305,9 +308,10 @@ cat <<-EOF >> $RAPPORT
 
 ......................................................................
 ## fichier ssl nginx
+## Dir : /etc/nginx/ssl
 ......................................................................
 EOF
-echo  "Dir : /etc/nginx/ssl" >> $RAPPORT ; echo "" >> $RAPPORT
+echo "" >> $RAPPORT
 cd /etc/nginx/ssl
 for SSL in `ls`
 do
