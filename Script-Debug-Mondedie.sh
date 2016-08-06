@@ -269,12 +269,12 @@ fi
 
 rapport /etc/init.d/"$USERNAME"-rtorrent "$USERNAME"-rtorrent 1
 
-cd $RUTORRENT_CONFFILE
-for VHOST in `ls`
+cd $RUTORRENT_CONFFILE || exit
+for VHOST in $(ls)
 do
         rapport $RUTORRENT_CONFFILE/$VHOST $VHOST 1
 done
-cd /tmp/Script-Debug-MonDedie
+cd /tmp/Script-Debug-MonDedie || exit
 
 if [[ -f $RUTORRENT_CONFFILE/cakebox.conf ]]; then
 	rapport /var/www/cakebox/config/"$USERNAME".php cakebox.config.php 1
@@ -282,8 +282,8 @@ fi
 
 rapport /etc/nginx/nginx.conf nginx.conf 1
 
-cd /etc/nginx/conf.d
-for CONF_D in `ls`
+cd /etc/nginx/conf.d || exit
+for CONF_D in $(ls)
 do
         rapport /etc/nginx/conf.d/$CONF_D $CONF_D 1
 done
@@ -297,8 +297,8 @@ cat <<-EOF >> $RAPPORT
 ......................................................................
 EOF
 echo "" >> $RAPPORT
-cd /etc/nginx/passwd
-for PASS in `ls`
+cd /etc/nginx/passwd || exit
+for PASS in $(ls)
 do
         echo "$PASS"  >> $RAPPORT
 done
@@ -312,12 +312,12 @@ cat <<-EOF >> $RAPPORT
 ......................................................................
 EOF
 echo "" >> $RAPPORT
-cd /etc/nginx/ssl
-for SSL in `ls`
+cd /etc/nginx/ssl || exit
+for SSL in $(ls)
 do
         echo "$SSL"  >> $RAPPORT
 done
-cd /tmp/Script-Debug-MonDedie
+cd /tmp/Script-Debug-MonDedie || exit
 rapport /var/log/nginx/rutorrent-error.log nginx.log 1
 #rapport $RUTORRENT/conf/config.php rutorrent.config.Php 1
 
