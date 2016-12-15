@@ -8,6 +8,8 @@
 # cd Script-Debug-MonDedie
 # chmod a+x Script-Debug-Mondedie.sh & ./Script-Debug-Mondedie.sh
 #
+# Possibilité de lancer avec un nom d'user en argument
+
 
 CSI="\033["
 CEND="${CSI}0m"
@@ -37,7 +39,7 @@ FONCGEN () {
 	if [[ -f $RAPPORT ]]; then
 		echo -e "${CRED}\nFichier de rapport détecté${CEND}"
 		rm $RAPPORT
-		echo -e "${CGREEN}Fichier de rapport supprimé${CEND}"
+		echo -e "${CBLUE}Fichier de rapport supprimé${CEND}"
 	fi
 	touch $RAPPORT
 
@@ -81,8 +83,8 @@ FONCCHECKBIN () { # $2 => No installation
 FONCGENRAPPORT () {
 	echo -e "${CBLUE}\nFichier de rapport terminé${CEND}\n"
 	LINK=$(/usr/bin/pastebinit -b http://paste.ubuntu.com $RAPPORT)
-	echo -e "Allez sur le topic adéquat et envoyez ce lien:\n${CYELLOW}$LINK${CEND}"
-	echo -e "Rapport stocké dans le fichier : ${CYELLOW}$RAPPORT${CEND}"
+	echo -e "${CBLUE}Allez sur le topic adéquat et envoyez ce lien:{CEND}\n${CYELLOW}$LINK${CEND}"
+	echo -e "${CBLUE}Rapport stocké dans le fichier :{CEND} ${CYELLOW}$RAPPORT${CEND}"
 }
 
 FONCRAPPORT () {
@@ -196,8 +198,13 @@ echo -e "${CBLUE}
 ${CEND}"
 
 echo ""
-echo -e -n "${CGREEN}Rentrez le nom de votre utilisateur rTorrent:${CEND} "
-read -r USERNAME
+if [ "$1" = "" ]; then
+	echo -e -n "${CGREEN}Rentrez le nom de votre utilisateur rTorrent:${CEND} "
+	read -r USERNAME
+else
+	USERNAME="$1"
+fi
+
 echo -e "${CBLUE}Merci de patienter quelques secondes...${CEND}"
 
 FONCGEN ruTorrent "$USERNAME"
