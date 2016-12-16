@@ -9,8 +9,10 @@
 # chmod a+x Script-Debug-Mondedie.sh & ./Script-Debug-Mondedie.sh
 #
 # Possibilité de lancer avec un nom d'user en argument
+# ./Script-Debug-Mondedie.sh user
 
 
+# variables
 CSI="\033["
 CEND="${CSI}0m"
 CGREEN="${CSI}1;32m"
@@ -29,12 +31,7 @@ PHP_VERSION=$(php -v | cut -c 1-7 | grep PHP | cut -c 5-7)
 RUTORRENT="/var/www/rutorrent"
 RUTORRENT_CONFFILE="/etc/nginx/sites-enabled"
 
-
-if [[ $UID != 0 ]]; then
-	echo -e "${CRED}Ce script doit être executé en tant que root${CEND}"
-	exit
-fi
-
+# function
 FONCGEN () {
 	if [[ -f $RAPPORT ]]; then
 		echo -e "${CRED}\nFichier de rapport détecté${CEND}"
@@ -64,27 +61,22 @@ FONCGEN () {
 	fi
 }
 
-FONCCHECKBIN () { # $2 => No installation
-	if ! [[ $(dpkg -s "$1" | grep Status ) =~ "Status: install ok installed" ]] &> /dev/null ; then # $1 = Nom du programme
-		if [[ $2 = 1 ]]; then
-			echo "Le programme $1 n'est pas installé" >> $RAPPORT
-		else
-			echo -e "${CGREEN}\nLe programme${CEND} ${CYELLOW}$1${CEND}${CGREEN} n'est pas installé\nIl va être installé pour la suite du script${CEND}"
-			sleep 2
-			apt-get -y install "$1" &>/dev/null
-		fi
+FONCCHECKBIN () {
+	if hash "$1" 2>/dev/null; then
+		echo "Le programme $1 est installé" >> $RAPPORT
 	else
-		if [[ $2 = 1 ]]; then
-			echo "Le programme $1 est installé" >> $RAPPORT
-		fi
+		echo -e "${CGREEN}\nLe programme${CEND} ${CYELLOW}$1${CEND}${CGREEN} n'est pas installé\nIl va être installé pour la suite du script${CEND}"
+		sleep 2
+		apt-get -y install "$1"
+		echo ""
 	fi
 }
 
 FONCGENRAPPORT () {
 	echo -e "${CBLUE}\nFichier de rapport terminé${CEND}\n"
 	LINK=$(/usr/bin/pastebinit -b http://paste.ubuntu.com $RAPPORT)
-	echo -e "${CBLUE}Allez sur le topic adéquat et envoyez ce lien:{CEND}\n${CYELLOW}$LINK${CEND}"
-	echo -e "${CBLUE}Rapport stocké dans le fichier :{CEND} ${CYELLOW}$RAPPORT${CEND}"
+	echo -e "${CBLUE}Allez sur le topic adéquat et envoyez ce lien:${CEND}\n${CYELLOW}$LINK${CEND}"
+	echo -e "${CBLUE}Rapport stocké dans le fichier :${CEND} ${CYELLOW}$RAPPORT${CEND}"
 }
 
 FONCRAPPORT () {
@@ -189,6 +181,10 @@ FONCREMOVE () {
 	fi
 }
 
+####################
+# lancement script #
+####################
+
 # logo
 echo -e "${CBLUE}
                                       |          |_)         _|
@@ -197,145 +193,145 @@ echo -e "${CBLUE}
            _|  _|  _|\___/ _|  _|\__,_|\___|\__,_|_|\___|_)_|  _|
 ${CEND}"
 
-echo ""
+if [[ $UID != 0 ]]; then
+	echo -e "${CRED}Ce script doit être executé en tant que root${CEND}"
+	echo ""
+	exit 1
+fi
+
 if [ "$1" = "" ]; then
-	echo -e -n "${CGREEN}Rentrez le nom de votre utilisateur rTorrent:${CEND} "
+	echo ""; echo -e -n "${CGREEN}Rentrez le nom de votre utilisateur rTorrent:${CEND} "
 	read -r USERNAME
 else
 	USERNAME="$1"
 fi
 
-echo -e "${CBLUE}Merci de patienter quelques secondes...${CEND}"
-
-FONCGEN ruTorrent "$USERNAME"
-FONCCHECKBIN pastebinit
-
-FONCTESTRTORRENT
-
-cat <<-EOF >> $RAPPORT
-
-	.......................................................................................................................................
-	## rTorrent Activity
-	.......................................................................................................................................
-
-EOF
-
-if [[ $VALID_USER = 0 ]]; then
-	echo -e "--> Utilisateur inexistant" >> $RAPPORT
+if [[ $(grep "$USERNAME:" -c /etc/shadow) != "1" ]]; then
+	echo ""; echo -e "${CRED}Erreur, l'utilisateur n'existe pas${CEND}"
+	echo ""
 else
+
+	echo ""; echo -e "${CBLUE}Merci de patienter quelques secondes...${CEND}"
+
+	FONCGEN ruTorrent "$USERNAME"
+	FONCCHECKBIN pastebinit
+
+	FONCTESTRTORRENT
+
+	cat <<-EOF >> $RAPPORT
+
+		.......................................................................................................................................
+		## rTorrent Activity
+		.......................................................................................................................................
+
+	EOF
+
 	echo -e "$(/bin/ps uU "$USERNAME" | grep -e rtorrent)" >> $RAPPORT
-fi
 
-cat <<-EOF >> $RAPPORT
+	cat <<-EOF >> $RAPPORT
 
-	.......................................................................................................................................
-	## Irssi Activity
-	.......................................................................................................................................
+		.......................................................................................................................................
+		## Irssi Activity
+		.......................................................................................................................................
 
-EOF
+	EOF
 
-if ! [[ -f "/etc/irssi.conf" ]]; then
-	echo -e "--> Irssi non installé" >> $RAPPORT
-else
-	echo -e "$(/bin/ps uU "$USERNAME" | grep -e irssi)" >> $RAPPORT
-fi
+	if ! [[ -f "/etc/irssi.conf" ]]; then
+		echo -e "--> Irssi non installé" >> $RAPPORT
+	else
+		echo -e "$(/bin/ps uU "$USERNAME" | grep -e irssi)" >> $RAPPORT
+	fi
 
-cat <<-EOF >> $RAPPORT
+	cat <<-EOF >> $RAPPORT
 
-	.......................................................................................................................................
-	## .rtorrent.rc
-	## File : /home/$USERNAME/.rtorrent.rc
-	.......................................................................................................................................
-EOF
-echo "" >> $RAPPORT
+		.......................................................................................................................................
+		## .rtorrent.rc
+		## File : /home/$USERNAME/.rtorrent.rc
+		.......................................................................................................................................
+	EOF
+	echo "" >> $RAPPORT
 
-if [[ $VALID_USER = 0 ]]; then
-	echo "--> Fichier introuvable (Utilisateur inexistant)" >> $RAPPORT
-else
 	if ! [[ -f "/home/$USERNAME/.rtorrent.rc" ]]; then
 		echo "--> Fichier introuvable" >> $RAPPORT
 	else
 		cat "/home/$USERNAME/.rtorrent.rc" >> $RAPPORT
 	fi
-fi
 
-cat <<-EOF >> $RAPPORT
+	cat <<-EOF >> $RAPPORT
 
-	.......................................................................................................................................
-	## ruTorrent config.php $USERNAME
-	## File : $RUTORRENT/conf/users/$USERNAME/config.php
-	.......................................................................................................................................
-EOF
-echo "" >> $RAPPORT
+		.......................................................................................................................................
+		## ruTorrent config.php $USERNAME
+		## File : $RUTORRENT/conf/users/$USERNAME/config.php
+		.......................................................................................................................................
+	EOF
+	echo "" >> $RAPPORT
 
-if [[ $VALID_USER = 0 ]]; then
-	echo "--> Fichier introuvable (Utilisateur Inexistant)" >> $RAPPORT
-else
 	if [[ ! -f "$RUTORRENT/conf/users/$USERNAME/config.php" ]]; then
 		echo "--> Fichier introuvable" >> $RAPPORT
 	else
 		cat $RUTORRENT/conf/users/"$USERNAME"/config.php >> $RAPPORT
 	fi
+
+	FONCRAPPORT /etc/init.d/"$USERNAME"-rtorrent "$USERNAME"-rtorrent 1
+
+	cd $RUTORRENT_CONFFILE || exit
+	for VHOST in $(ls)
+	do
+		FONCRAPPORT "$RUTORRENT_CONFFILE"/"$VHOST" "$VHOST" 1
+	done
+
+	if [[ -f $RUTORRENT_CONFFILE/cakebox.conf ]]; then
+		FONCRAPPORT /var/www/cakebox/config/"$USERNAME".php cakebox.config.php 1
+	fi
+
+	FONCRAPPORT /etc/nginx/nginx.conf nginx.conf 1
+
+	cd /etc/nginx/conf.d || exit
+	for CONF_D in $(ls)
+	do
+		FONCRAPPORT /etc/nginx/conf.d/"$CONF_D" "$CONF_D" 1
+	done
+
+	cat <<-EOF >> $RAPPORT
+
+		.......................................................................................................................................
+		## fichier pass nginx
+		## Dir : /etc/nginx/passwd
+		.......................................................................................................................................
+	EOF
+	echo "" >> $RAPPORT
+
+	cd /etc/nginx/passwd || exit
+	for PASS in $(ls)
+	do
+	echo "$PASS" >> $RAPPORT
+	done
+
+	cat <<-EOF >> $RAPPORT
+
+		.......................................................................................................................................
+		## fichier ssl nginx
+		## Dir : /etc/nginx/ssl
+		.......................................................................................................................................
+	EOF
+	echo "" >> $RAPPORT
+
+	cd /etc/nginx/ssl || exit
+	for SSL in $(ls)
+	do
+		echo "$SSL" >> $RAPPORT
+	done
+
+	FONCRAPPORT /var/log/nginx/rutorrent-error.log nginx.log 1
+
+	cat <<-EOF >> $RAPPORT
+
+		.......................................................................................................................................
+		## fin
+		.......................................................................................................................................
+	EOF
+
+	FONCGENRAPPORT
+	FONCREMOVE
+	echo ""
 fi
-
-FONCRAPPORT /etc/init.d/"$USERNAME"-rtorrent "$USERNAME"-rtorrent 1
-
-cd $RUTORRENT_CONFFILE || exit
-for VHOST in $(ls)
-do
-	FONCRAPPORT "$RUTORRENT_CONFFILE"/"$VHOST" "$VHOST" 1
-done
-
-if [[ -f $RUTORRENT_CONFFILE/cakebox.conf ]]; then
-	FONCRAPPORT /var/www/cakebox/config/"$USERNAME".php cakebox.config.php 1
-fi
-
-FONCRAPPORT /etc/nginx/nginx.conf nginx.conf 1
-
-cd /etc/nginx/conf.d || exit
-for CONF_D in $(ls)
-do
-	FONCRAPPORT /etc/nginx/conf.d/"$CONF_D" "$CONF_D" 1
-done
-
-cat <<-EOF >> $RAPPORT
-
-	.......................................................................................................................................
-	## fichier pass nginx
-	## Dir : /etc/nginx/passwd
-	.......................................................................................................................................
-EOF
-echo "" >> $RAPPORT
-
-cd /etc/nginx/passwd || exit
-for PASS in $(ls)
-do
-echo "$PASS" >> $RAPPORT
-done
-
-cat <<-EOF >> $RAPPORT
-
-	.......................................................................................................................................
-	## fichier ssl nginx
-	## Dir : /etc/nginx/ssl
-	.......................................................................................................................................
-EOF
-echo "" >> $RAPPORT
-
-cd /etc/nginx/ssl || exit
-for SSL in $(ls)
-do
-	echo "$SSL" >> $RAPPORT
-done
-
-FONCRAPPORT /var/log/nginx/rutorrent-error.log nginx.log 1
-
-cat <<-EOF >> $RAPPORT
-
-	.......................................................................................................................................
-	## fin
-	.......................................................................................................................................
-EOF
-
-FONCGENRAPPORT
-FONCREMOVE
