@@ -78,7 +78,7 @@ FONCGENRAPPORT () {
 	echo -e "${CBLUE}\nFichier de rapport terminé${CEND}\n"
 	LINK=$(/usr/bin/pastebinit -b http://paste.ubuntu.com $RAPPORT)
 	echo -e "${CBLUE}Allez sur le topic adéquat et envoyez ce lien:${CEND}\n${CYELLOW}$LINK${CEND}"
-	echo -e "${CBLUE}Rapport stocké dans le fichier :${CEND} ${CYELLOW}$RAPPORT${CEND}"
+	echo -e "${CBLUE}Rapport stocké dans le fichier:${CEND}\n${CYELLOW}$RAPPORT${CEND}"
 }
 
 FONCRAPPORT () {
@@ -89,6 +89,13 @@ FONCRAPPORT () {
 				FILE="--> Fichier Vide"
 			else
 				FILE=$(cat "$1")
+				# domain.tld
+				if [[ "$1" = /etc/nginx/sites-enabled/* ]]; then
+					SERVER_NAME=$(grep server_name < "$1" | cut -d';' -f1 | cut -c14-)
+					if ! [[ "$SERVER_NAME" = _ ]]; then
+						FILE=$(sed "s/server_name[[:blank:]]${SERVER_NAME};/server_name domain.tld;/g;" "$1")
+					fi
+				fi
 			fi
 		else
 			FILE="--> Fichier Invalide"
