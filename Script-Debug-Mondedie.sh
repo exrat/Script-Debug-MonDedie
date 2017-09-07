@@ -23,6 +23,7 @@ CBLUE="${CSI}1;34m"
 RAPPORT="/tmp/rapport.txt"
 DEBIAN_VERSION=$(cat /etc/debian_version)
 NOYAU=$(uname -r)
+CPU=$(sed '/^$/d' < /proc/cpuinfo | grep -m 1 'model name' | cut -c14-)
 DATE=$(date +"%d-%m-%Y à %H:%M")
 NGINX_VERSION=$(2>&1 nginx -v | grep -Eo "[0-9.+]{1,}")
 RUTORRENT_VERSION=$(grep version: < /var/www/rutorrent/js/webui.js | grep -E -o "[0-9]\.[0-9]{1,}")
@@ -49,6 +50,7 @@ FONCGEN () {
 		Utilisateur ruTorrent --> $USERNAME
 		Debian : $DEBIAN_VERSION
 		Kernel : $NOYAU
+		CPU : $CPU
 		nGinx : $NGINX_VERSION
 		ruTorrent : $RUTORRENT_VERSION
 		rTorrent : $RTORRENT_VERSION
