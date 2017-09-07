@@ -368,10 +368,7 @@ else
 	echo "" >> $RAPPORT
 
 	cd /etc/nginx/passwd || exit
-	for PASS in $(ls)
-	do
-	echo "$PASS" >> $RAPPORT
-	done
+	stat -c "%a %U:%G %n" * >> $RAPPORT
 
 	cat <<-EOF >> $RAPPORT
 
