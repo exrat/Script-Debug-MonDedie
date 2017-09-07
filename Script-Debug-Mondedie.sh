@@ -236,11 +236,23 @@ else
 	cat <<-EOF >> $RAPPORT
 
 		.......................................................................................................................................
-		## Partition
+		## Partition & Droits
 		.......................................................................................................................................
 
 	EOF
 	df -h >> $RAPPORT
+
+	echo "" >> $RAPPORT
+	stat -c "%a %U:%G %n" /home/"$USERNAME" >> $RAPPORT
+	if [ -f /var/www/rutorrent/histo.log ]; then
+		for CHECK in '.autodl' '.backup-session' '.irssi'; do
+			stat -c "%a %U:%G %n" /home/"$USERNAME"/"$CHECK" >> $RAPPORT
+		done
+	fi
+
+	for CHECK in '.rtorrent.rc' '.session' 'torrents' 'watch'; do
+		stat -c "%a %U:%G %n" /home/"$USERNAME"/"$CHECK" >> $RAPPORT
+	done
 
 	FONCTESTRTORRENT
 
