@@ -298,6 +298,34 @@ else
 	cat <<-EOF >> $RAPPORT
 
 		.......................................................................................................................................
+		## ruTorrent /filemanager/conf.php
+		## File : /var/www/rutorrent/plugins/filemanager/conf.php
+		.......................................................................................................................................
+	EOF
+	echo "" >> $RAPPORT
+	if [[ ! -f "$RUTORRENT/plugins/filemanager/conf.php" ]]; then
+		echo "--> Fichier introuvable" >> $RAPPORT
+	else
+		cat $RUTORRENT/plugins/filemanager/conf.php >> $RAPPORT
+	fi
+
+	cat <<-EOF >> $RAPPORT
+
+		.......................................................................................................................................
+		## ruTorrent /create/conf.php
+		## File : /var/www/rutorrent/plugins/create/conf.php
+		.......................................................................................................................................
+	EOF
+	echo "" >> $RAPPORT
+	if [[ ! -f "$RUTORRENT/plugins/create/conf.php" ]]; then
+		echo "--> Fichier introuvable" >> $RAPPORT
+	else
+		cat $RUTORRENT/plugins/create/conf.php >> $RAPPORT
+	fi
+
+	cat <<-EOF >> $RAPPORT
+
+		.......................................................................................................................................
 		## ruTorrent config.php $USERNAME
 		## File : $RUTORRENT/conf/users/$USERNAME/config.php
 		.......................................................................................................................................
