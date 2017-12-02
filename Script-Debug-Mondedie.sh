@@ -48,13 +48,14 @@ FONCGEN () {
 		### Rapport pour ruTorrent généré le $DATE ###
 
 		Utilisateur ruTorrent --> $USERNAME
-		Debian : $DEBIAN_VERSION
-		Kernel : $NOYAU
-		CPU : $CPU
-		nGinx : $NGINX_VERSION
+
+		Debian    : $DEBIAN_VERSION
+		Kernel    : $NOYAU
+		CPU       : $CPU
+		nGinx     : $NGINX_VERSION
 		ruTorrent : $RUTORRENT_VERSION
-		rTorrent : $RTORRENT_VERSION
-		PHP : $PHP_VERSION
+		rTorrent  : $RTORRENT_VERSION
+		PHP       : $PHP_VERSION
 	EOF
 
 	echo "" >> $RAPPORT
