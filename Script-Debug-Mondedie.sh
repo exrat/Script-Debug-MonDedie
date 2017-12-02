@@ -6,7 +6,7 @@
 # cd /tmp
 # git clone https://github.com/exrat/Script-Debug-MonDedie
 # cd Script-Debug-MonDedie
-# chmod a+x Script-Debug-Mondedie.sh & ./Script-Debug-Mondedie.sh
+# chmod a+x Script-Debug-Mondedie.sh && ./Script-Debug-Mondedie.sh
 #
 # Possibilité de lancer avec un nom d'user en argument
 # ./Script-Debug-Mondedie.sh user
@@ -180,7 +180,13 @@ FONCTESTRTORRENT () {
 	fi
 
 	# nginx
-	if [[ $(cat $RUTORRENT_CONFFILE/rutorrent.conf) =~ $SCGI ]]; then
+	if [[ -f "$RUTORRENT_CONFFILE"/rutorrent.conf ]]; then
+		VHOST="rutorrent.conf"
+	elif [[ -f "$RUTORRENT_CONFFILE"/seedbox.conf ]]; then
+		VHOST="seedbox.conf"
+	fi
+
+	if [[ $(cat "$RUTORRENT_CONFFILE/$VHOST") =~ $SCGI ]]; then
 		echo -e "Les ports nginx et celui indiqué correspondent" >> $RAPPORT
 	else
 		echo -e "Les ports nginx et celui indiqué ne correspondent pas" >> $RAPPORT
@@ -236,7 +242,7 @@ else
 	cat <<-EOF >> $RAPPORT
 
 		.......................................................................................................................................
-		## Partition & Droits
+		## Partitions & Droits
 		.......................................................................................................................................
 
 	EOF
