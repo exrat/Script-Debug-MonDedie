@@ -80,7 +80,7 @@ FONCCHECKBIN () {
 
 FONCGENRAPPORT () {
 	echo -e "${CBLUE}\nFichier de rapport terminé${CEND}\n"
-	LINK=$(/usr/bin/pastebinit -b $PASTEBIN $RAPPORT)
+	LINK=$(/usr/bin/pastebinit -b $PASTEBIN $RAPPORT 2>/dev/null)
 	echo -e "${CBLUE}Allez sur le topic adéquat et envoyez ce lien:${CEND}\n${CYELLOW}$LINK${CEND}"
 	echo -e "${CBLUE}Rapport stocké dans le fichier:${CEND}\n${CYELLOW}$RAPPORT${CEND}"
 }
